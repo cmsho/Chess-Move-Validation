@@ -54,8 +54,8 @@ Each piece is represented as a string of three characters.
 * The program prevents either team from having more than 16 pieces on the board.
 
 * Each piece is separated by whitespace and (optionally) a comma.  For example, the following strings are valid input for WHITE: or BLACK:
-** Rf1, Kg1, Pf2 Ph2, Pg3
-** Kb8, Ne8, Pa7, Pb7, Pc7, Ra5
+* Rf1, Kg1, Pf2 Ph2, Pg3 
+* Kb8, Ne8, Pa7, Pb7, Pc7, Ra5
 
 
 # Additional Remarks
