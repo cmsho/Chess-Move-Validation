@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Piece.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Chess</a> &gt; <a href="index.source.html" class="el_package">edu.drexel.cs3585</a> &gt; <span class="el_source">Piece.java</span></div><h1>Piece.java</h1><pre class="source lang-java linenums">//**************************************************************************************
+// Piece.java	
+//
+// Author: Colton Shoenberger
+// UserID: cs3585
+//
+// Defines the rules and methods of each piece
+//**************************************************************************************
+
+package edu.drexel.cs3585;
+
+<span class="fc" id="L12">public abstract class Piece {</span>
+
+	// True if piece is white, false is piece is black
+	boolean white;
+
+	// Method to determine if a move is valid
+	abstract boolean legalMove(int xFrom, int yFrom, int xTo, int yTo, boolean capture);
+}
+
+class King extends Piece {
+
+<span class="fc" id="L23">	King(boolean white) {</span>
+<span class="fc" id="L24">		this.white = white;</span>
+<span class="fc" id="L25">	}</span>
+
+	@Override
+	boolean legalMove(int xFrom, int yFrom, int xTo, int yTo, boolean capture) {
+		
+		// Kings can move exactly one space in any direction
+<span class="fc bfc" id="L31" title="All 4 branches covered.">		return (Math.abs(xFrom - xTo) &lt;= 1 &amp;&amp; Math.abs(yFrom - yTo) &lt;= 1);</span>
+	}
+}
+
+class Queen extends Piece {
+
+<span class="fc" id="L37">	Queen(boolean white) {</span>
+<span class="fc" id="L38">		this.white = white;</span>
+<span class="fc" id="L39">	}</span>
+
+	@Override
+	boolean legalMove(int xFrom, int yFrom, int xTo, int yTo, boolean capture) {
+		
+		// Queens can move in a straight line along a row or column 
+		// (dx = 0 or dy = 0)  
+<span class="fc bfc" id="L46" title="All 8 branches covered.">		return (((xFrom == xTo &amp;&amp; yFrom != yTo) || (xFrom != xTo &amp;&amp; yFrom == yTo)) ||</span>
+				// Queens can also move diagonally (dx = dy)
+<span class="fc bfc" id="L48" title="All 2 branches covered.">				(Math.abs(xFrom - xTo) == Math.abs(yFrom - yTo)));</span>
+	}
+}
+
+class Rook extends Piece {
+
+<span class="fc" id="L54">	Rook(boolean white) {</span>
+<span class="fc" id="L55">		this.white = white;</span>
+<span class="fc" id="L56">	}</span>
+
+	@Override
+	boolean legalMove(int xFrom, int yFrom, int xTo, int yTo, boolean capture) {
+		
+		// Rooks can move in a straight line along a row or column (either dx = 0 or dy = 0) 
+<span class="pc bpc" id="L62" title="2 of 8 branches missed.">		return ((xFrom == xTo &amp;&amp; yFrom != yTo) || (xFrom != xTo &amp;&amp; yFrom == yTo));</span>
+	}
+}
+
+class Bishop extends Piece {
+
+<span class="fc" id="L68">	Bishop(boolean white) {</span>
+<span class="fc" id="L69">		this.white = white;</span>
+<span class="fc" id="L70">	}</span>
+
+	@Override
+	boolean legalMove(int xFrom, int yFrom, int xTo, int yTo, boolean capture) {
+		
+		// Bishops can only move diagonally (dx = dy)
+<span class="fc bfc" id="L76" title="All 2 branches covered.">		return (Math.abs(xFrom - xTo) == Math.abs(yFrom - yTo));</span>
+	}
+}
+
+class Knight extends Piece {
+
+<span class="fc" id="L82">	Knight(boolean white) {</span>
+<span class="fc" id="L83">		this.white = white;</span>
+<span class="fc" id="L84">	}</span>
+
+	@Override
+	boolean legalMove(int xFrom, int yFrom, int xTo, int yTo, boolean capture) {
+		
+		// Knights move in an L shape.  Two spaces on one axis, one space on the other.
+<span class="fc bfc" id="L90" title="All 4 branches covered.">		return ((Math.abs(xFrom - xTo) == 2 &amp;&amp; Math.abs(yFrom - yTo) == 1) ||</span>
+<span class="fc bfc" id="L91" title="All 4 branches covered.">				(Math.abs(xFrom - xTo) == 1 &amp;&amp; Math.abs(yFrom - yTo) == 2));</span>
+	}
+}
+
+class Pawn extends Piece {
+
+<span class="fc" id="L97">	Pawn(boolean white) {</span>
+<span class="fc" id="L98">		this.white = white;</span>
+<span class="fc" id="L99">	}</span>
+
+	@Override
+	boolean legalMove(int xFrom, int yFrom, int xTo, int yTo, boolean capture) {
+
+		// Pawns can only move forward
+<span class="fc bfc" id="L105" title="All 4 branches covered.">		return (this.forward(yFrom, yTo) &amp;&amp;	</span>
+				// If it is a capture...
+				((capture &amp;&amp; 
+						// ...and the move is forward and diagonal by one, it is legal.  OR
+<span class="fc bfc" id="L109" title="All 6 branches covered.">						Math.abs(xFrom - xTo) == 1 &amp;&amp; Math.abs(yFrom - yTo) == 1) ||</span>
+				// If it is not left, right, or diagonal...
+				((xFrom == xTo) &amp;&amp;
+						// ...and it is forward one space, it is legal.  OR
+<span class="fc bfc" id="L113" title="All 2 branches covered.">						(Math.abs(yFrom - yTo) == 1 ||</span>
+						// If it is the pawn's first move...
+<span class="fc bfc" id="L115" title="All 2 branches covered.">						(this.firstMove(yFrom) &amp;&amp;</span>
+							// and it is forward two spaces, it is legal.
+<span class="fc bfc" id="L117" title="All 2 branches covered.">							Math.abs(yTo - yFrom) == 2)))));</span>
+	}
+
+	// Pawns can only move forward, which is relative to the pawn's color
+	// Returns true if the pawn is moving forward
+	private boolean forward(int yFrom, int yTo) {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">		if (this.white) {</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">			return (yFrom &lt;= yTo);</span>
+		}
+		else {
+<span class="fc bfc" id="L127" title="All 2 branches covered.">			return (yTo &lt;= yFrom);</span>
+		}
+	}
+
+	// If it is the pawn's first move, it can move one or two spaces
+	// White pawns start at y = 1, black pawns start at y = 6
+	private boolean firstMove(int yFrom) {
+<span class="fc bfc" id="L134" title="All 2 branches covered.">		if (this.white) {</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">			return (yFrom == 1);</span>
+		}
+		else {
+<span class="fc bfc" id="L138" title="All 2 branches covered.">			return (yFrom == 6);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

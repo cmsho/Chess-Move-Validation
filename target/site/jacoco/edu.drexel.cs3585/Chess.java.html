@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Chess.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Chess</a> &gt; <a href="index.source.html" class="el_package">edu.drexel.cs3585</a> &gt; <span class="el_source">Chess.java</span></div><h1>Chess.java</h1><pre class="source lang-java linenums">//**************************************************************************************
+// Chess.java	
+//
+// Author: Colton Shoenberger
+// UserID: cs3585
+//
+// Provides move validation for the game of chess
+//**************************************************************************************
+
+package edu.drexel.cs3585;
+
+import java.util.Scanner;
+
+<span class="nc" id="L14">public class Chess {</span>
+	
+	public static void main (String[] args) {
+		
+		// Create a chessboard, represented as a 2D array
+<span class="nc" id="L19">		Piece[][] board = new Piece[8][8];</span>
+
+		// Greet the user
+<span class="nc" id="L22">		System.out.println(&quot;This program provides move validation for the game of chess. &quot;</span>
+				+ &quot;Consult readMe.txt for formatting rules regarding user input.&quot;);
+		
+		// Have the user input the pieces to be placed on the board
+<span class="nc" id="L26">		String pieceToMove = userInput(board);</span>
+		
+		// Print legal moves
+<span class="nc" id="L29">		System.out.println(&quot;LEGAL MOVES FOR &quot; + pieceToMove + &quot;: &quot; + printLegalMoves(pieceToMove, board));</span>
+
+<span class="nc" id="L31">	}</span>
+
+	// The userInput method collects input from the user and calls supporting methods to validate the input.
+	// As input is validated, the pieces are placed on the board
+	// The method returns a string for the final piece to move
+	static String userInput(Piece[][] board) {
+		// Have the user enter the white pieces to be placed on the board
+<span class="fc" id="L38">		Scanner scan = new Scanner(System.in, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L39">		System.out.print(&quot;WHITE: &quot;);</span>
+<span class="fc" id="L40">		String whitePieces = scan.nextLine();</span>
+
+		// Check the input to confirm it is valid.  If it is invalid, have the user re-enter the input
+<span class="fc bfc" id="L43" title="All 4 branches covered.">		while (!validInput(whitePieces) || !noOverlap(whitePieces)) {</span>
+<span class="fc" id="L44">			System.out.println(&quot;Please try again.&quot;);</span>
+<span class="fc" id="L45">			System.out.print(&quot;WHITE: &quot;);</span>
+<span class="fc" id="L46">			whitePieces = scan.nextLine();</span>
+		}
+		
+		// Place white pieces on the board
+<span class="fc" id="L50">		makePieces(whitePieces, board, true);</span>
+		
+		// Have the user enter the black pieces to be placed on the board
+<span class="fc" id="L53">		System.out.print(&quot;BLACK: &quot;);</span>
+<span class="fc" id="L54">		String blackPieces = scan.nextLine();</span>
+<span class="fc" id="L55">		String allPieces = whitePieces + &quot; &quot; + blackPieces;</span>
+
+		// Check the input to confirm it is valid.  If it is invalid, have the user re-enter the input
+<span class="fc bfc" id="L58" title="All 4 branches covered.">		while (!validInput(blackPieces) || !noOverlap(allPieces)) {</span>
+<span class="fc" id="L59">			System.out.println(&quot;Please try again.&quot;);</span>
+<span class="fc" id="L60">			System.out.print(&quot;BLACK: &quot;);</span>
+<span class="fc" id="L61">			blackPieces = scan.nextLine();</span>
+<span class="fc" id="L62">			allPieces = whitePieces + &quot; &quot; + blackPieces;</span>
+		}
+		
+		// Place black pieces on the board
+<span class="fc" id="L66">		makePieces(blackPieces, board, false);</span>
+
+		// Have the user enter the piece to move
+<span class="fc" id="L69">		System.out.print(&quot;PIECE TO MOVE: &quot;);</span>
+<span class="fc" id="L70">		String pieceToMove = scan.nextLine();</span>
+
+		// Confirm input is valid and that the piece exists on the board.  If not, have user re-enter input
+<span class="fc bfc" id="L73" title="All 4 branches covered.">		while (!validFormat(pieceToMove) || !pieceExists(pieceToMove, allPieces)) {</span>
+<span class="fc" id="L74">			System.out.println(&quot;Please try again.&quot;);</span>
+<span class="fc" id="L75">			System.out.print(&quot;PIECE TO MOVE: &quot;);</span>
+<span class="fc" id="L76">			pieceToMove = scan.nextLine();</span>
+		}
+		
+<span class="fc" id="L79">		scan.close();</span>
+<span class="fc" id="L80">		return pieceToMove;</span>
+	}
+	
+	static boolean validInput(String str) {
+<span class="fc bfc" id="L84" title="All 6 branches covered.">		return (validFormat(str) &amp;&amp; oneKing(str) &amp;&amp; noOverflow(str));</span>
+	}
+	
+	
+	// Method for checking the input to confirm the formatting is valid.
+	static boolean validFormat(String str) {
+		String nextPiece;
+<span class="fc" id="L91">		char type = 0;</span>
+<span class="fc" id="L92">		char column = 0;</span>
+<span class="fc" id="L93">		char row = 0;</span>
+<span class="fc" id="L94">		Scanner scan = new Scanner(str);</span>
+
+		// Check the input to confirm it is valid
+<span class="fc bfc" id="L97" title="All 2 branches covered.">		while (scan.hasNext()) {</span>
+
+			// Assign each word to nextPiece
+<span class="fc" id="L100">			nextPiece = scan.next();		</span>
+			
+			// If nextPiece is of valid length, assign the first three characters to type, column, and row
+<span class="fc bfc" id="L103" title="All 2 branches covered.">			if (validLength(nextPiece)) {</span>
+<span class="fc" id="L104">				type = nextPiece.charAt(0);</span>
+<span class="fc" id="L105">				column = nextPiece.charAt(1);</span>
+<span class="fc" id="L106">				row = nextPiece.charAt(2);</span>
+			}
+
+			// If nextPiece is not of valid length, or one of the characters is not proper, return false
+<span class="fc bfc" id="L110" title="All 8 branches covered.">			if (!validLength(nextPiece) || !validType(type) || !validColumn(column) || !validRow(row)) {</span>
+<span class="fc" id="L111">				scan.close();</span>
+<span class="fc" id="L112">				System.out.println(&quot;Input invalid.  Consult readMe.txt for formatting rules.&quot;);</span>
+<span class="fc" id="L113">				return false;</span>
+			}
+		}
+		// If it passes all the above tests, return true
+<span class="fc" id="L117">		scan.close();</span>
+<span class="fc" id="L118">		return true;</span>
+	}
+	
+	// Method to validate each word in the string is the proper length to specify a piece
+	static boolean validLength(String str) {
+<span class="fc bfc" id="L123" title="All 6 branches covered.">		return (str.length() == 3 || (str.length() == 4 &amp;&amp; str.charAt(3) == ','));</span>
+	}
+	
+	// Method to validate the first character properly specifies the piece's type
+	static boolean validType(char type) {
+<span class="fc bfc" id="L128" title="All 12 branches covered.">		return (type == 'K' || type == 'Q' || type == 'R' || type == 'B' || type == 'N' || type == 'P');</span>
+	}
+	
+	// Method to validate the second character properly specifies the piece's column
+	static boolean validColumn(char column) {
+<span class="fc bfc" id="L133" title="All 16 branches covered.">		return (column == 'a' || column == 'b' || column == 'c' || column == 'd' || </span>
+				column == 'e' || column == 'f' || column == 'g' || column == 'h');
+	}
+	
+	// Method to validate the third character properly specifies the piece's row
+	static boolean validRow(char row) {
+<span class="fc bfc" id="L139" title="All 16 branches covered.">		return (row == '1' || row == '2' || row == '3' || row == '4' ||</span>
+				row == '5' || row == '6' || row == '7' || row == '8');
+	}
+	
+	// Method to validate that each team has exactly one King piece
+	static boolean oneKing(String str) {
+
+<span class="fc" id="L146">		String input = str;</span>
+		String nextPiece;
+<span class="fc" id="L148">		Scanner count = new Scanner(input);</span>
+
+		// Create an integer variable to keep track of the number of kings
+<span class="fc" id="L151">		int kings = 0;</span>
+
+		// Scan each piece being added to the board
+<span class="fc bfc" id="L154" title="All 2 branches covered.">		while(count.hasNext()) {</span>
+<span class="fc" id="L155">			nextPiece = count.next();</span>
+			// If the piece is a king, increment the count of kings
+<span class="fc bfc" id="L157" title="All 2 branches covered.">			if (nextPiece.charAt(0) == 'K'){</span>
+<span class="fc" id="L158">				kings++;</span>
+			}	
+		}
+
+		// There should be exactly one king
+<span class="fc bfc" id="L163" title="All 2 branches covered.">		if (kings != 1) {</span>
+<span class="fc" id="L164">			count.close();</span>
+<span class="fc" id="L165">			System.out.println(&quot;There should be exactly one King piece placed on the board.&quot;);</span>
+<span class="fc" id="L166">			return false;</span>
+		}
+		else {
+<span class="fc" id="L169">			count.close();</span>
+<span class="fc" id="L170">			return true;</span>
+		}
+	}
+
+	
+	// Method to confirm a team does not have more than 16 pieces
+	static boolean noOverflow(String str) {
+
+<span class="fc" id="L178">		String input = str;</span>
+<span class="fc" id="L179">		Scanner count = new Scanner(input);</span>
+
+		// Integer variable to keep track of the number of pieces
+<span class="fc" id="L182">		int pieces = 0;</span>
+
+		// Count the number of piecces being added to the board
+<span class="fc bfc" id="L185" title="All 2 branches covered.">		while(count.hasNext()) {</span>
+<span class="fc" id="L186">			count.next();</span>
+<span class="fc" id="L187">			pieces++;</span>
+		}
+
+		// There should not be more than sixteen pieces per team
+<span class="fc bfc" id="L191" title="All 2 branches covered.">		if (pieces &gt; 16) {</span>
+<span class="fc" id="L192">			count.close();</span>
+<span class="fc" id="L193">			System.out.println(&quot;Each team cannot have more than sixteen pieces on the board.&quot;);</span>
+<span class="fc" id="L194">			return false;</span>
+		}
+		else {
+<span class="fc" id="L197">			count.close();</span>
+<span class="fc" id="L198">			return true;</span>
+		}
+	}
+	
+	
+	// Method for confirming no two white pieces are assigned to the same board location
+	static boolean noOverlap(String str) {
+		
+<span class="fc" id="L206">		String input = str;</span>
+		String nextPiece, location;
+<span class="fc" id="L208">		Scanner count = new Scanner(input);</span>
+
+		// Create an integer vairable to represent the number of pieces in the input line
+<span class="fc" id="L211">		int totalPieces = 0;</span>
+
+		// Count the number of pieces in the line, store the value in totalPieces
+<span class="fc bfc" id="L214" title="All 2 branches covered.">		while (count.hasNext()) {</span>
+<span class="fc" id="L215">			totalPieces++;</span>
+<span class="fc" id="L216">			count.next();</span>
+		}
+<span class="fc" id="L218">		count.close();</span>
+		
+		// Create an array to store the piece locations
+<span class="fc" id="L221">		String[] occupiedSpaces = new String[totalPieces];</span>
+
+<span class="fc" id="L223">		Scanner scan = new Scanner(input);</span>
+
+		// For each piece in the string...
+<span class="fc bfc" id="L226" title="All 2 branches covered.">		for(int i = 0; i &lt; totalPieces; i++) {</span>
+<span class="fc" id="L227">			nextPiece = scan.next();</span>
+
+			// If input is less than three characters, return false
+<span class="fc bfc" id="L230" title="All 2 branches covered.">			if (!validLength(nextPiece)) {</span>
+<span class="fc" id="L231">				scan.close();</span>
+<span class="fc" id="L232">				return false;</span>
+			}
+
+			// Store the piece's location in the occupiedSpaces array
+<span class="fc" id="L236">			location = nextPiece.substring(1, 3);</span>
+<span class="fc" id="L237">			occupiedSpaces[i] = location;</span>
+
+			// Compare each new location to the existing locations
+<span class="fc bfc" id="L240" title="All 2 branches covered.">			for(int j = 0; j &lt; i; j++) {</span>
+				// If an overlap is found, the noOverlap method will return false
+<span class="fc bfc" id="L242" title="All 2 branches covered.">				if (occupiedSpaces[j].equals(location)) {</span>
+<span class="fc" id="L243">					System.out.println(&quot;Two pieces cannot be assigned to the same location.&quot;);</span>
+<span class="fc" id="L244">					scan.close();</span>
+<span class="fc" id="L245">					return false;</span>
+				}
+			}
+		} 
+		// If the end of the loop was reached without finding any overlap, return true
+<span class="fc" id="L250">		scan.close();</span>
+<span class="fc" id="L251">		return true;</span>
+	}
+
+	
+	// Method to place pieces on the board
+	static Piece[][] makePieces(String pieces, Piece[][] board, boolean white) {
+		// Assign the current board to newBoard, which will later replace the current board
+<span class="fc" id="L258">		Piece[][] newBoard = board;</span>
+
+<span class="fc" id="L260">		Scanner scan = new Scanner(pieces);</span>
+		String newPiece;
+		char type, row, column;
+		int xVal, yVal;
+
+<span class="fc bfc" id="L265" title="All 2 branches covered.">		while (scan.hasNext()) {</span>
+
+			// Scan each word in the string and assign it to newPiece
+<span class="fc" id="L268">			newPiece = scan.next();</span>
+
+			// Evaluate the first three characters of newPiece to determine its type and location
+<span class="fc" id="L271">			type = newPiece.charAt(0);</span>
+<span class="fc" id="L272">			column = newPiece.charAt(1);</span>
+<span class="fc" id="L273">			row = newPiece.charAt(2);</span>
+
+			// Convert the row and column char to proper (x,y) int values
+<span class="fc" id="L276">			xVal = xIndex(column);</span>
+<span class="fc" id="L277">			yVal = yIndex(row);</span>
+
+			// Create a new piece and place it at the proper location in the array
+<span class="fc bfc" id="L280" title="All 2 branches covered.">			if (white) {</span>
+<span class="fc" id="L281">				newBoard[yVal][xVal] = makeWhitePiece(type);</span>
+			}
+			else {
+<span class="fc" id="L284">				newBoard[yVal][xVal] = makeBlackPiece(type);</span>
+			}
+		}
+<span class="fc" id="L287">		scan.close();</span>
+<span class="fc" id="L288">		return newBoard;</span>
+	}
+
+	
+	// Method for converting the column value from input to an integer for assigning its location in the board array
+	static int xIndex(char x) {
+<span class="fc bfc" id="L294" title="All 2 branches covered.">			 if (x == 'a') {return 0;}</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">		else if (x == 'b') {return 1;}</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">		else if (x == 'c') {return 2;}</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">		else if (x == 'd') {return 3;}</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">		else if (x == 'e') {return 4;}</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">		else if (x == 'f') {return 5;}</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">		else if (x == 'g') {return 6;}</span>
+<span class="fc" id="L301">		else return 7;</span>
+	}
+
+
+	// Method for converting the row value from input to an integer for assigning its location in the board array
+	static int yIndex(char y) {
+<span class="fc bfc" id="L307" title="All 2 branches covered.">			 if (y == '1') {return 0;}</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">		else if (y == '2') {return 1;}</span>
+<span class="fc bfc" id="L309" title="All 2 branches covered.">		else if (y == '3') {return 2;}</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">		else if (y == '4') {return 3;}</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">		else if (y == '5') {return 4;}</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">		else if (y == '6') {return 5;}</span>
+<span class="fc bfc" id="L313" title="All 2 branches covered.">		else if (y == '7') {return 6;}</span>
+<span class="fc" id="L314">		else return 7;</span>
+	}
+
+	
+	// Method for creating new white pieces
+	static Piece makeWhitePiece(char type) {
+<span class="fc bfc" id="L320" title="All 2 branches covered.">			 if (type == 'K') {return new King(true);}</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">		else if (type == 'Q') {return new Queen(true);}</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">		else if (type == 'R') {return new Rook(true);}</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">		else if (type == 'B') {return new Bishop(true);}</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">		else if (type == 'N') {return new Knight(true);}</span>
+<span class="fc" id="L325">		else return new Pawn(true);</span>
+	}
+
+
+	// Method for creating new black pieces
+	static Piece makeBlackPiece(char type) {
+<span class="fc bfc" id="L331" title="All 2 branches covered.">			 if (type == 'K') {return new King(false);}</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">		else if (type == 'Q') {return new Queen(false);}</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">		else if (type == 'R') {return new Rook(false);}</span>
+<span class="fc bfc" id="L334" title="All 2 branches covered.">		else if (type == 'B') {return new Bishop(false);}</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">		else if (type == 'N') {return new Knight(false);}</span>
+<span class="fc" id="L336">		else return new Pawn(false);</span>
+	}
+
+
+	// Method that checks to confirm the PieceToMove exists
+	static boolean pieceExists(String pieceToMove, String allPieces) {
+
+		String comparePiece;
+<span class="fc" id="L344">		Scanner scan = new Scanner(allPieces);</span>
+
+		// Search for the piece
+<span class="fc bfc" id="L347" title="All 2 branches covered.">		while (scan.hasNext()) {</span>
+
+<span class="fc" id="L349">			comparePiece = scan.next();</span>
+
+			// If we've confirmed the piece exists, return true
+<span class="fc bfc" id="L352" title="All 2 branches covered.">			if (pieceToMove.equals(comparePiece.substring(0,3))) {</span>
+<span class="fc" id="L353">				scan.close();</span>
+<span class="fc" id="L354">				return true;</span>
+			}
+		}
+		// If we've reached the end of the loop, the piece does not exist on the board.
+<span class="fc" id="L358">		scan.close();</span>
+<span class="fc" id="L359">		System.out.println(&quot;This piece does not exist on the board.&quot;);</span>
+<span class="fc" id="L360">		return false;</span>
+	}	
+	
+	
+	// Method to print the legal moves
+	static String printLegalMoves(String pieceToMove, Piece[][] board) {
+		
+<span class="fc" id="L367">		String legalMoves = &quot;&quot;;</span>
+<span class="fc" id="L368">		String prefix = &quot;&quot;;</span>
+<span class="fc" id="L369">		StringBuilder build = new StringBuilder();</span>
+		
+		// Determine the location of pieceToMove
+<span class="fc" id="L372">		char column = pieceToMove.charAt(1);</span>
+<span class="fc" id="L373">		char row = pieceToMove.charAt(2);</span>
+<span class="fc" id="L374">		int xVal = xIndex(column);</span>
+<span class="fc" id="L375">		int yVal = yIndex(row);</span>
+<span class="fc" id="L376">		Piece piece = board[yVal][xVal];</span>
+		// Count the total number of legal moves
+<span class="fc" id="L378">		int numMoves = 0;</span>
+
+		// Determine legal moves and print them
+<span class="fc bfc" id="L381" title="All 2 branches covered.">		for (int x = 0; x &lt; 8; x++) {</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">			for (int y = 0; y &lt; 8; y++) {</span>
+
+				// If the space we're trying to move to is occupied, evaluate a potential capture move
+<span class="fc" id="L385">				Piece to = board[y][x];</span>
+<span class="fc bfc" id="L386" title="All 2 branches covered.">				boolean capture = (to != null);</span>
+
+				// If the move is potentially legal
+<span class="fc bfc" id="L389" title="All 6 branches covered.">				if (piece.legalMove(xVal, yVal, x, y, capture) &amp;&amp;</span>
+					// and it is not occupied by a piece of the same color
+					(!capture || piece.white != to.white) &amp;&amp;
+					// and there are no pieces blocking the movement path
+<span class="fc bfc" id="L393" title="All 2 branches covered.">					noBlocks(xVal, yVal, x, y, board) &amp;&amp;</span>
+					// and the king is not exposed to check
+<span class="fc bfc" id="L395" title="All 2 branches covered.">					safeKing(xVal, yVal, x, y, board, piece)) {</span>
+
+					// Print the legal move
+<span class="fc" id="L398">					build.append(prefix);</span>
+<span class="fc" id="L399">					prefix = &quot;, &quot;;</span>
+<span class="fc" id="L400">					build.append(toColumn(x) + &quot;&quot; + toRow(y));</span>
+<span class="fc" id="L401">					numMoves++;</span>
+				}
+			}
+<span class="fc" id="L404">			legalMoves = build.toString();</span>
+		}
+		// Inform the user if there are no legal moves
+<span class="fc bfc" id="L407" title="All 2 branches covered.">		if (numMoves == 0) {</span>
+<span class="fc" id="L408">			legalMoves = &quot;No legal moves.&quot;;</span>
+		}
+		
+<span class="fc" id="L411">		return legalMoves;</span>
+	}
+	
+	
+	// Method for checking if a piece is blocked.  Returns true if no pieces are blocking the potential movement
+	static boolean noBlocks(int xFrom, int yFrom, int xTo, int yTo, Piece[][] board) {
+		// Destination
+<span class="fc" id="L418">		Piece dest = board[yTo][xTo];</span>
+		
+		// Determine the distance (number of spaces) the piece will be moving
+<span class="fc" id="L421">		int dist = Math.max(Math.abs(xFrom - xTo), Math.abs(yFrom - yTo));</span>
+
+		// Determine the direction(s) of movement along the x and y axes
+		int dx, dy;
+
+<span class="fc bfc" id="L426" title="All 2 branches covered.">			 if (xFrom &lt; xTo) 	{dx = 1;}  // Right</span>
+<span class="fc bfc" id="L427" title="All 2 branches covered.">		else if (xFrom == xTo) 	{dx = 0;}</span>
+<span class="fc" id="L428">		else 					{dx = -1;} // Left</span>
+	
+<span class="fc bfc" id="L430" title="All 2 branches covered.">			 if (yFrom &lt; yTo) 	{dy = 1;}  // Up</span>
+<span class="fc bfc" id="L431" title="All 2 branches covered.">		else if (yFrom == yTo)	{dy = 0;}</span>
+<span class="fc" id="L432">		else 					{dy = -1;} // Down</span>
+		
+		// The knight piece does not have to worry about being blocked.
+		// All pieces besides the knight move in a straight line. 
+		// Thus, the following if statement properly exempts the knight.
+<span class="fc bfc" id="L437" title="All 6 branches covered.">		if (xFrom == xTo || yFrom == yTo || Math.abs(xFrom - xTo) == Math.abs(yFrom - yTo)) {</span>
+			
+			// Check each space along the movement path for blocks
+<span class="fc bfc" id="L440" title="All 2 branches covered.">			for (int i = 1; i &lt; dist; i++) {</span>
+<span class="fc" id="L441">				int x = xFrom + (i * dx);</span>
+<span class="fc" id="L442">				int y = yFrom + (i * dy);</span>
+
+				// If a space along the movement path is occupied, and we are not at the destination, return false
+<span class="pc bpc" id="L445" title="1 of 4 branches missed.">				if (board[y][x] != null &amp;&amp; board[y][x] != dest) {</span>
+<span class="fc" id="L446">					return false;</span>
+				}
+			}
+		}
+		// If not blocked, return true
+<span class="fc" id="L451">		return true;</span>
+	}
+
+	
+	// Method to determine if a potential move would leave the king exposed to check.
+	static boolean safeKing(int xFrom, int yFrom, int xTo, int yTo, Piece[][] board, Piece piece) {
+
+		// Boolean to specify whether the king is safe; switches to false if exposed to check
+<span class="fc" id="L459">		boolean safe = true;</span>
+
+		// Store the location of the king for the player whose turn it is to move
+<span class="fc" id="L462">		int[] king = findKing(board, piece.white);</span>
+		
+		// Remember the original state of the &quot;to&quot; location (in order to reset the board at the end of this method)
+<span class="fc" id="L465">		Piece before = board[yTo][xTo];</span>
+		// Place the piece at the location we're considering moving it to
+<span class="fc" id="L467">		board[yTo][xTo] = piece;</span>
+		// Remove it from its original location (reset at end of method)
+<span class="fc" id="L469">		board[yFrom][xFrom] = null;</span>
+		
+		// If the piece that we moved was the King, store its new location
+<span class="fc bfc" id="L472" title="All 2 branches covered.">		if (piece instanceof King) {</span>
+<span class="fc" id="L473">			king[0] = xTo;</span>
+<span class="fc" id="L474">			king[1] = yTo;</span>
+		}
+		
+		// Examine the entire board
+<span class="fc bfc" id="L478" title="All 2 branches covered.">		for (int x = 0; x &lt; 8; x++) {</span>
+<span class="fc bfc" id="L479" title="All 2 branches covered.">			for (int y = 0; y &lt; 8; y++) {</span>
+<span class="fc" id="L480">				Piece enemy = board[y][x];</span>
+				
+				// If we find a piece
+<span class="fc bfc" id="L483" title="All 4 branches covered.">				if (enemy != null &amp;&amp;</span>
+					// and it belongs to the opponent's team
+					enemy.white != piece.white &amp;&amp;
+					// and it has a path to the King's location
+<span class="fc bfc" id="L487" title="All 2 branches covered.">					enemy.legalMove(x, y, king[0], king[1], true) &amp;&amp;</span>
+					// and its path to the King is not blocked
+<span class="fc bfc" id="L489" title="All 2 branches covered.">					noBlocks(x, y, king[0], king[1], board)) {</span>
+					// then the King is in check
+<span class="fc" id="L491">					safe = false;</span>
+				}
+			}
+		}
+
+		// Return the board to its original state
+<span class="fc" id="L497">		board[yFrom][xFrom] = piece;</span>
+<span class="fc" id="L498">		board[yTo][xTo] = before;</span>
+		
+<span class="fc" id="L500">		return safe;</span>
+	}
+
+
+	// Returns the location of the King of the given color
+	static int[] findKing(Piece[][] board, boolean white) {
+		// Array to store the king's location
+<span class="fc" id="L507">		int[] location = new int[2];</span>
+		
+<span class="fc bfc" id="L509" title="All 2 branches covered.">		for (int x = 0; x &lt; 8; x++) {</span>
+<span class="fc bfc" id="L510" title="All 2 branches covered.">			for (int y = 0; y &lt; 8; y++) {</span>
+<span class="fc" id="L511">				Piece piece = board[y][x];</span>
+				
+				// True if we found the king of the correct color
+<span class="fc bfc" id="L514" title="All 4 branches covered.">				if (piece instanceof King &amp;&amp; piece.white == white) {</span>
+					// Store its location in the array
+<span class="fc" id="L516">					location[0] = x;</span>
+<span class="fc" id="L517">					location[1] = y;</span>
+				}
+			}
+		}
+<span class="fc" id="L521">		return location;</span>
+	}
+	
+	// Method for converting the xIndex of a piece on the board to the char value corresponding to its column
+	static char toColumn(int x) {
+<span class="fc bfc" id="L526" title="All 2 branches covered.">			 if (x == 0) {return 'a';}</span>
+<span class="fc bfc" id="L527" title="All 2 branches covered.">		else if (x == 1) {return 'b';}</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">		else if (x == 2) {return 'c';}</span>
+<span class="fc bfc" id="L529" title="All 2 branches covered.">		else if (x == 3) {return 'd';}</span>
+<span class="fc bfc" id="L530" title="All 2 branches covered.">		else if (x == 4) {return 'e';}</span>
+<span class="fc bfc" id="L531" title="All 2 branches covered.">		else if (x == 5) {return 'f';}</span>
+<span class="fc bfc" id="L532" title="All 2 branches covered.">		else if (x == 6) {return 'g';}</span>
+<span class="fc" id="L533">		else return 'h';</span>
+	}
+
+
+	// Method for converting the yIndex of a piece on the board to the int value corresponding to its row
+	static int toRow(int y) {
+<span class="fc bfc" id="L539" title="All 2 branches covered.">			 if (y == 0) {return 1;}</span>
+<span class="fc bfc" id="L540" title="All 2 branches covered.">		else if (y == 1) {return 2;}</span>
+<span class="fc bfc" id="L541" title="All 2 branches covered.">		else if (y == 2) {return 3;}</span>
+<span class="fc bfc" id="L542" title="All 2 branches covered.">		else if (y == 3) {return 4;}</span>
+<span class="fc bfc" id="L543" title="All 2 branches covered.">		else if (y == 4) {return 5;}</span>
+<span class="fc bfc" id="L544" title="All 2 branches covered.">		else if (y == 5) {return 6;}</span>
+<span class="fc bfc" id="L545" title="All 2 branches covered.">		else if (y == 6) {return 7;}</span>
+<span class="fc" id="L546">		else return 8;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
