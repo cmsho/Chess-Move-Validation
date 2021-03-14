@@ -1,6 +1,5 @@
 # Chess
-Author: Colton Shoenberger
-cs3585@drexel.edu
+This is a Java application I created using the Maven framework for a "Software Reliability and Testing" course at Drexel University in 2019.  This program operates on the command-line interface and validates legal moves for a chess piece.
 
 
 # How to Build
